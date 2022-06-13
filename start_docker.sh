@@ -2,7 +2,7 @@
 
 IMAGE_NAME="epfl-lasa/iiwa_position_ctrl_interface"
 USERNAME="ros"
-MODE= ()
+MODE=()
 
 
 # Help
@@ -42,7 +42,7 @@ while [ "$#" -gt 0 ]; do
         shift 1
         ;;
     *)
-        if [-z "${MODE}"]; then
+        if [ -z "${MODE}" ]; then
             MODE=$1
         else
             FWD_ARGS+=("$1")
