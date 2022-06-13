@@ -2,7 +2,7 @@
 
 IMAGE_NAME="epfl-lasa/iiwa_position_ctrl_interface"
 USERNAME="ros"
-MODE= ()
+MODE=()
 
 
 # Help
