@@ -4,13 +4,6 @@
 IMAGE_NAME=epfl-lasa/iiwa_position_ctrl_interface
 BASE_IMAGE=ghcr.io/aica-technology/ros-ws:noetic
 
-# What does that do?
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-if [[ ! -f "${SCRIPT_DIR}"/config/sshd_entrypoint.sh ]]; then
-  mkdir -p "${SCRIPT_DIR}"/config
-  cp "$(dirname "${SCRIPT_DIR}")"/common/sshd_entrypoint.sh "${SCRIPT_DIR}"/config/ || exit 1
-fi
-
 # Help
 HELP_MESSAGE="Usage: ./build.sh [-r, --rebuild] [-v, --verbose] [-i, --image-name]
 Build the '${IMAGE_NAME}' image.
@@ -32,11 +25,11 @@ while [ "$#" -gt 0 ]; do
     BUILD_FLAGS+=(--progress=plain)
     shift 1
     ;;
--i | --image-name)
+  -i | --image-name)
     IMAGE_NAME=$2
     shift 2
     ;;
--h | --help)
+  -h | --help)
     echo "${HELP_MESSAGE}"
     exit 0
     ;;
@@ -54,5 +47,6 @@ docker pull "${BASE_IMAGE}" || echo -e "\'033[33mCould not pull docker image ${B
 # Setup build flags
 BUILD_FLAGS+=(--build-arg BASE_IMAGE="${BASE_IMAGE}")
 BUILD_FLAGS+=(-t "${IMAGE_NAME}")
+BUILD_FLAGS+=(--build-arg HOST_GID=$(id -g))   # Pass the correct GID to avoid issues with mounted volumes
 
 DOCKER_BUILDKIT=1 docker build "${BUILD_FLAGS[@]}" .
