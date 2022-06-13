@@ -21,7 +21,7 @@ Options:
 # Argument parsing
 RUN_FLAGS=()
 FWS_FLAGS=()
-SHOW_HELP = false
+SHOW_HELP=false
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -38,7 +38,7 @@ while [ "$#" -gt 0 ]; do
         shift 2
         ;;
     -h | --help)
-        SHOW_HELP = true
+        SHOW_HELP=true
         shift 1
         ;;
     *)
