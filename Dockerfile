@@ -6,7 +6,8 @@ FROM ${BASE_IMAGE}
 ARG HOST_GID=1000
 USER root
 RUN groupadd --gid ${HOST_GID} host_group
-RUN sudo usermod ${USER} -a -G ${HOST_GID} 
+RUN sudo usermod ${USER} -g ${HOST_GID}
+RUN sudo usermod ${USER} -a -G ${USER}
 USER ${USER}
 
 WORKDIR /tmp
