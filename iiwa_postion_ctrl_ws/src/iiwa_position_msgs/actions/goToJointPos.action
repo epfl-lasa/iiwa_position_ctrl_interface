@@ -1,0 +1,17 @@
+# Goal
+# Goal
+uint32 nbJoints
+float64[] goalPose
+float64[] tol
+---
+
+# Result
+uint32 nbJoints
+float64[] finalError
+bool positionReached
+---
+
+# Feedback
+uint32 nbJoints
+float64[] currentError
+

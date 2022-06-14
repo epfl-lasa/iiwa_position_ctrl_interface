@@ -1,0 +1,2 @@
+iiwa_position_ctrl
+-DCATKIN_DEVEL_PREFIX=/home/ros/iiwa_position_ctrl_interface/iiwa_postion_ctrl_ws/devel -DCMAKE_INSTALL_PREFIX=/home/ros/iiwa_position_ctrl_interface/iiwa_postion_ctrl_ws/install -G Unix Makefiles
