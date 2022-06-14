@@ -71,7 +71,7 @@ if [ "${MODE}" != "connect" ]; then
     FWD_ARGS+=(--volume="iiwa_position_ctrl_interface_vol:/home/${USERNAME}/iiwa_position_ctrl_interface")
 fi
 
-sudo aica-docker \
+aica-docker \
     "${MODE}" \
     "${IMAGE_NAME}" \
     -u "${USERNAME}" \
