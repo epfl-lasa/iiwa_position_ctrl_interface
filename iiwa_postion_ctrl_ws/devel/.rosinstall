@@ -1,2 +1,0 @@
-- setup-file:
-    local-name: /home/ros/iiwa_position_ctrl_interface/iiwa_postion_ctrl_ws/devel/setup.sh

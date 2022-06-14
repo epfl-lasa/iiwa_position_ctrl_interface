@@ -1,8 +1,0 @@
-prefix=/home/ros/iiwa_position_ctrl_interface/iiwa_postion_ctrl_ws/devel
-
-Name: iiwa_postion_ctrl
-Description: Description of iiwa_postion_ctrl
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
