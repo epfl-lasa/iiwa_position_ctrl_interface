@@ -1,6 +1,7 @@
 #!/bin/bash
 
 IMAGE_NAME="epfl-lasa/iiwa_position_ctrl_interface"
+CONTAINER_NAME="${IMAGE_NAME//[\/.]/-}"
 USERNAME="ros"
 MODE=()
 
@@ -60,16 +61,19 @@ fi
 
 
 # Create shared volumes to work with
-docker volume rm iiwa_position_ctrl_interface_vol
-docker volume create --driver local \
-    --opt type="none" \
-    --opt device="${PWD}" \
-    --opt o="bind" \
-    "iiwa_position_ctrl_interface_vol"
+if [ "${MODE}" != "connect" ]; then
+    docker volume rm iiwa_position_ctrl_interface_vol
+    docker volume create --driver local \
+        --opt type="none" \
+        --opt device="${PWD}" \
+        --opt o="bind" \
+        "iiwa_position_ctrl_interface_vol"
+    FWD_ARGS+=(--volume="iiwa_position_ctrl_interface_vol:/home/${USERNAME}/iiwa_position_ctrl_interface")
+fi
 
 sudo aica-docker \
     "${MODE}" \
     "${IMAGE_NAME}" \
     -u "${USERNAME}" \
-    --volume="iiwa_position_ctrl_interface_vol:/home/${USERNAME}/iiwa_position_ctrl_interface" \
+    -n "${CONTAINER_NAME}" \
     "${FWD_ARGS[@]}" \
