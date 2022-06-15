@@ -1,3 +1,10 @@
+/**
+ * @file type_conversions.cpp
+ * @author Loïc Niederhauser (loic.niederhauser@epfl.ch)
+ * @brief Contains functions to perform conversions between different vector types.
+ * @copyright Copyright (c) EPFL-LASA 2022
+ */
+
 #include "type_conversions.h"
 
 std::vector<double> jointStateToPosVec(state_representation::JointState jointState){

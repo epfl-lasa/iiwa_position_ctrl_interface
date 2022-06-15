@@ -1,4 +1,11 @@
 
+/**
+ * @file position_ctrl.cpp
+ * @author Loïc Niederhauser (loic.niederhauser@epfl.ch)
+ * @brief A file containing a ROS node capable of running an action server
+ *        to go to specific positions in joint space
+ * @copyright Copyright (c) EPFL-LASA 2022
+ */
 #include <chrono>
 #include <thread>
 
@@ -46,6 +53,15 @@ PositionController::PositionController(const std::shared_ptr<ros::NodeHandle> &n
     goToJointPosAS_.start();
 }
 
+void PositionController::setActionFBFrq(float newActionFBFrq){
+    if(newActionFBFrq <= 0){
+        ROS_ERROR("Cannot set action feedback frequency."
+                  "Value must be strictly greater than 0");
+    } else {
+        actionFBFrq_ = newActionFBFrq;
+    }
+}
+
 void PositionController::sendPosCommand(std::vector<double> posCmd) {
     std_msgs::Float64MultiArray positionCmdMsg;
 
@@ -55,6 +71,11 @@ void PositionController::sendPosCommand(std::vector<double> posCmd) {
     }
 
     commandPub_.publish(positionCmdMsg);
+}
+
+void PositionController::stopRobot(){
+    std::lock_guard<std::mutex> jointStateLock(jointStateMtx_);
+    this->sendPosCommand(eigenVecToStdVec(jointState_.get_positions()));
 }
 
 void PositionController::jointStateCallback(const sensor_msgs::JointState::ConstPtr &msg) {
@@ -174,11 +195,5 @@ bool PositionController::goalReached(Eigen::VectorXd posDiff, std::vector<double
     return goalIsReached;
 }
 
-void PositionController::setActionFBFrq(float newActionFBFrq){
-    actionFBFrq_ = newActionFBFrq;
-}
 
-void PositionController::stopRobot(){
-    std::lock_guard<std::mutex> jointStateLock(jointStateMtx_);
-    this->sendPosCommand(eigenVecToStdVec(jointState_.get_positions()));
-}
+
