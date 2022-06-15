@@ -39,7 +39,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 add_compile_definitions(BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS)
 add_compile_definitions(BOOST_MPL_LIMIT_LIST_SIZE=30)
 
-catkin_package(CATKIN_DEPENDS iiwa_position_msgs)
+catkin_package(CATKIN_DEPENDS iiwa_position_msgs
+               LIBRARIES ctrl_position_interface)
 
 
 ### Code directories
@@ -54,10 +55,11 @@ include_directories(
     /opt/openrobots/include
 )
 
-
-
-### Create exectuable
-add_executable(ctrl_position_interface src/position_ctrl.cpp src/type_conversions.cpp)
+### Create library
+set(SRC_FILES
+    src/position_ctrl.cpp
+    src/type_conversions.cpp)
+add_library(ctrl_position_interface ${SRC_FILES})
 target_link_libraries(ctrl_position_interface
     ${catkin_LIBRARIES}
     ${PINOCCHIO_LIBRARIES}
