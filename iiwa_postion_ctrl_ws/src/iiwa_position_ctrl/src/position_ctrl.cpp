@@ -182,7 +182,3 @@ void PositionController::stopRobot(){
     std::lock_guard<std::mutex> jointStateLock(jointStateMtx_);
     this->sendPosCommand(eigenVecToStdVec(jointState_.get_positions()));
 }
-
-int main(void){
-    printf("Hello world\n");
-}
