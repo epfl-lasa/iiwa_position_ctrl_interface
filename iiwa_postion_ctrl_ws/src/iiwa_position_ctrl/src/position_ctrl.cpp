@@ -17,8 +17,8 @@ PositionController::PositionController(const std::shared_ptr<ros::NodeHandle> &n
                                        const std::string actionServerName,
                                        const float actionFBFrq = 200.) : 
     nodeHandle_(nh),
-    goToJointPosAS_(*nh, actionServerName, boost::bind(&PositionController::goToJointPosCallback, this, _1), false),
     firstJointStateReceived_(false),
+    goToJointPosAS_(*nh, actionServerName, boost::bind(&PositionController::goToJointPosCallback, this, _1), false),
     actionFBFrq_(actionFBFrq) {
 
     // Create a robot model

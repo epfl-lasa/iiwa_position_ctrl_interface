@@ -30,9 +30,9 @@ protected:
     bool checkGoalValid(const iiwa_position_msgs::goToJointPosGoalConstPtr &goal);
     void stopRobot();
 
-    std::shared_ptr<robot_model::Model> robotModel_;
     std::shared_ptr<ros::NodeHandle> nodeHandle_;
-
+    std::shared_ptr<robot_model::Model> robotModel_;
+    
     std::mutex jointStateMtx_;
     state_representation::JointState jointState_;
     std::atomic_bool firstJointStateReceived_;
@@ -40,6 +40,6 @@ protected:
     ros::Subscriber jointStateSub_;
     ros::Publisher commandPub_;
 
-    std::atomic<float> actionFBFrq_;
     actionlib::SimpleActionServer<iiwa_position_msgs::goToJointPosAction> goToJointPosAS_; // Action server to go to joint position
+    std::atomic<float> actionFBFrq_;
 };
