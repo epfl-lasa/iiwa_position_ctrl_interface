@@ -57,7 +57,7 @@ include_directories(
 
 
 ### Create exectuable
-add_executable(ctrl_position_interface src/position_ctrl.cpp)
+add_executable(ctrl_position_interface src/position_ctrl.cpp src/type_conversions.cpp)
 target_link_libraries(ctrl_position_interface
     ${catkin_LIBRARIES}
     ${PINOCCHIO_LIBRARIES}

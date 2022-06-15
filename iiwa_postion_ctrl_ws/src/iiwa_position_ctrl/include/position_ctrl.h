@@ -23,10 +23,12 @@ public:
     void setActionFBFrq(float newActionFBFrq);
 
 protected:
-
+    void sendPosCommand(std::vector<double> posCmd);
     void jointStateCallback(const sensor_msgs::JointState::ConstPtr &msg);
     void goToJointPosCallback(const iiwa_position_msgs::goToJointPosGoalConstPtr &goal);
     bool goalReached(Eigen::VectorXd jointDiff, std::vector<double> tol);
+    bool checkGoalValid(const iiwa_position_msgs::goToJointPosGoalConstPtr &goal);
+    void stopRobot();
 
     std::shared_ptr<robot_model::Model> robotModel_;
     std::shared_ptr<ros::NodeHandle> nodeHandle_;

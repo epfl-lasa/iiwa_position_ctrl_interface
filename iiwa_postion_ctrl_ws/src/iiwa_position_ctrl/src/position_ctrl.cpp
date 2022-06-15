@@ -10,6 +10,7 @@
 #include <iiwa_position_msgs/goToJointPosFeedback.h>
 
 #include "position_ctrl.h"
+#include "type_conversions.h"
 
 PositionController::PositionController(const std::shared_ptr<ros::NodeHandle> &nh,
                                        const std::string robotName,
@@ -23,7 +24,7 @@ PositionController::PositionController(const std::shared_ptr<ros::NodeHandle> &n
     // Create a robot model
     std::string robotDescription;
     if(!nodeHandle_->getParam("/robot_description", robotDescription)) {
-        ROS_ERROR("Could not loat parameter 'robot_description' from parameter server.");
+        ROS_ERROR("Could not load parameter 'robot_description' from parameter server.");
         ros::shutdown();
     }
     std::string urdfPath = "/tmp/" + robotName + ".urdf";
@@ -43,6 +44,17 @@ PositionController::PositionController(const std::shared_ptr<ros::NodeHandle> &n
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     goToJointPosAS_.start();
+}
+
+void PositionController::sendPosCommand(std::vector<double> posCmd) {
+    std_msgs::Float64MultiArray positionCmdMsg;
+
+    positionCmdMsg.data.resize(posCmd.size());
+    for(uint32_t i = 0; i < posCmd.size(); ++i){
+        positionCmdMsg.data[i] = posCmd[i];
+    }
+
+    commandPub_.publish(positionCmdMsg);
 }
 
 void PositionController::jointStateCallback(const sensor_msgs::JointState::ConstPtr &msg) {
@@ -66,10 +78,9 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
 
     // Ros helpers
     ros::Rate FBRate(1. / actionFBFrq_);
-    state_representation::JointState currentError;
+    Eigen::VectorXd currentError;
 
     // Messages
-    std_msgs::Float64MultiArray positionCmdMsg;
     iiwa_position_msgs::goToJointPosFeedback feedbackMsg;
     iiwa_position_msgs::goToJointPosResult resultMsg;
 
@@ -77,36 +88,28 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
     std::unique_lock<std::mutex> jointStateLock(jointStateMtx_);
     jointStateLock.unlock();
 
-    // Check number of joints
-    if (goal->nbJoints != robotModel_->get_number_of_joints()){
-        ROS_ERROR("Goal has the wrong number of joints, aborting action.");
-        goalValid = false;
-    }
+    // Check goal valid
+    goalValid = this->checkGoalValid(goal);
 
-    // Check if the goal is in range
-    state_representation::JointPositions goalJointPos = state_representation::JointState::Zero("", goal->nbJoints);
-    goalJointPos.set_positions(goal->goalPose);
-    if(!robotModel_->in_range(goalJointPos)){
-        ROS_ERROR("Goal position outside of robot bounds, aborting action.");
-        goalValid = false;
-    }
-
-    // Send command to IIWA
     if (goalValid){
-        positionCmdMsg.data.resize(goal->nbJoints);
-        for (uint32_t i = 0; i < goal->nbJoints; ++i){
-            positionCmdMsg.data[i] = goal->goalPose[i];
-        }
-        commandPub_.publish(positionCmdMsg);
+
+        // Send command to IIWA
+        this->sendPosCommand(goal->goalPose);
 
         // Feedback loop
-        while (true){
+        while (ros::ok()){
             
+            // Check for preemption
+            if(goToJointPosAS_.isPreemptRequested()){
+                this->stopRobot();
+                break;
+            }
+
             // Check if goal is reached
             jointStateLock.lock();
-            currentError = jointState_ - goalJointPos;
+            currentError = jointState_.get_positions() - stdVecToEigenVec(goal->goalPose);
             jointStateLock.unlock();
-            goalReached = this->goalReached(currentError.get_positions(), goal->tol);
+            goalReached = this->goalReached(currentError, goal->tol);
 
             // Break out when goal is reached
             if(goalReached){ 
@@ -115,11 +118,8 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
 
             // Format and send feedback
             feedbackMsg.nbJoints = robotModel_->get_number_of_joints();
-            feedbackMsg.currentError.resize(feedbackMsg.nbJoints);
-            Eigen::VectorXd currentErrorVec = currentError.get_positions();
-            for (uint32_t i = 0; i < feedbackMsg.nbJoints; ++i){
-                feedbackMsg.currentError[i] = currentErrorVec[i];
-            }
+            feedbackMsg.currentError = eigenVecToStdVec(currentError);
+            goToJointPosAS_.publishFeedback(feedbackMsg);
 
             // Sleep until next loop
             FBRate.sleep();
@@ -129,25 +129,44 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
     // Result message
     resultMsg.nbJoints = robotModel_->get_number_of_joints();
     resultMsg.positionReached = goalReached;
-    jointStateLock.lock();
-    currentError = jointState_ - goalJointPos;
-    jointStateLock.unlock();
-    Eigen::VectorXd currentErrorVec = currentError.get_positions();
-    resultMsg.finalError.resize(resultMsg.nbJoints);
-    for (uint32_t i = 0; i < feedbackMsg.nbJoints; ++i){
-        resultMsg.finalError[i] = currentErrorVec[i];
+    resultMsg.finalError = eigenVecToStdVec(currentError);
+    resultMsg.goalValid = goalValid;
+    goToJointPosAS_.setSucceeded(resultMsg);
+}
+
+bool PositionController::checkGoalValid(const iiwa_position_msgs::goToJointPosGoalConstPtr &goal){
+    
+    bool goalValid = true;
+
+    // Check number of joints
+    if (goal->nbJoints != robotModel_->get_number_of_joints()){
+        ROS_ERROR("Goal has the wrong number of joints, aborting action.");
+        goalValid = false;
+    
+    // Check if goal is in range
+    } else {
+
+        // Wrap goal in JointState for easy check
+        state_representation::JointPositions goalJointPos = state_representation::JointState::Zero("", goal->nbJoints);
+        goalJointPos.set_positions(goal->goalPose);
+
+        // Check range
+        if(!robotModel_->in_range(goalJointPos)){
+            ROS_ERROR("Goal position outside of robot bounds, aborting action.");
+            goalValid = false;
+        }
     }
+
+    return goalValid;
 }
 
 bool PositionController::goalReached(Eigen::VectorXd posDiff, std::vector<double> tol)
 {
-
     bool goalIsReached = true;
-    posDiff = posDiff.cwiseAbs();
 
     for (uint32_t i = 0; i < posDiff.size(); ++i)
     {
-        if (posDiff[i] > tol[i]){
+        if (abs(posDiff[i]) > abs(tol[i])){
             goalIsReached = false;
             break;
         }
@@ -155,9 +174,13 @@ bool PositionController::goalReached(Eigen::VectorXd posDiff, std::vector<double
     return goalIsReached;
 }
 
-void PositionController::setActionFBFrq(float newActionFBFrq)
-{
+void PositionController::setActionFBFrq(float newActionFBFrq){
     actionFBFrq_ = newActionFBFrq;
+}
+
+void PositionController::stopRobot(){
+    std::lock_guard<std::mutex> jointStateLock(jointStateMtx_);
+    this->sendPosCommand(eigenVecToStdVec(jointState_.get_positions()));
 }
 
 int main(void){

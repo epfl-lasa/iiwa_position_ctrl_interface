@@ -9,6 +9,7 @@ float64[] tol
 uint32 nbJoints
 float64[] finalError
 bool positionReached
+bool goalValid
 ---
 
 # Feedback
