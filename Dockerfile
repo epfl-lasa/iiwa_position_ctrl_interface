@@ -11,7 +11,7 @@ RUN usermod ${USER} -a -G ${USER}
 USER ${USER}
 
 WORKDIR /tmp
-RUN git clone -b v4.0.0 https://github.com/epfl-lasa/control_libraries.git \
-    && cd control_libraries/source && sudo ./install.sh -y
+RUN git clone -b v6.0.0 https://github.com/epfl-lasa/control_libraries.git \
+    && cd control_libraries/source && sudo ./install.sh -y --no-dynamical-systems --no-controllers
 
 WORKDIR ${HOME}
