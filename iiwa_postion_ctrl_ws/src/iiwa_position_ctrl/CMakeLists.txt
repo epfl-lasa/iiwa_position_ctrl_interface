@@ -1,4 +1,3 @@
-
 ### Flags and standards
 cmake_minimum_required(VERSION 3.12)
 project(iiwa_postion_ctrl)
