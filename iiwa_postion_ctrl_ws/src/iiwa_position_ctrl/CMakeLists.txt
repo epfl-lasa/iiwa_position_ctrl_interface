@@ -19,21 +19,17 @@ endif()
 
 
 ### Dependencies
-find_library(state_representation REQUIRED)
-find_library(robot_model REQUIERD)
+list(APPEND CMAKE_PREFIX_PATH /opt/openrobots)
 
+find_package(control_libraries 6.0.0 REQUIRED COMPONENTS
+    state_representation
+    robot_model)
 find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs
     sensor_msgs
     actionlib
     iiwa_position_msgs)
-
-list(APPEND CMAKE_PREFIX_PATH /opt/openrobots)
-find_package(Eigen3 REQUIRED)
-find_package(pinocchio REQUIRED)
-find_package(OsqpEigen REQUIRED)
-find_package(osqp REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS system)
 add_compile_definitions(BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS)
@@ -42,31 +38,23 @@ add_compile_definitions(BOOST_MPL_LIMIT_LIST_SIZE=30)
 catkin_package(CATKIN_DEPENDS iiwa_position_msgs
                LIBRARIES ctrl_position_interface)
 
-
 ### Code directories
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
-    ${Eigen3_INCLUDE_DIRS}
-    ${STATE_REPRESENTATION_INCLUDE_DIR}
-    ${ROBOT_MODEL_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIR}
-    ${OsqpEigen_INCLUDE_DIR}
     /opt/openrobots/include
 )
 
 ### Create library
 set(SRC_FILES
-    src/position_ctrl.cpp
-    src/type_conversions.cpp)
+    src/type_conversions.cpp
+    src/position_ctrl.cpp)
+
 add_library(ctrl_position_interface ${SRC_FILES})
+
 target_link_libraries(ctrl_position_interface
     ${catkin_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    OsqpEigen::OsqpEigen
-    osqp::osqp
-    state_representation
-    robot_model
+    ${control_libraries_LIBRARIES}
 )
 
 ### Intall commands
