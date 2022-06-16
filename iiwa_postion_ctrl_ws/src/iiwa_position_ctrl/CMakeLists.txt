@@ -66,7 +66,7 @@ target_link_libraries(ctrl_position_interface
     robot_model
 )
 
-### Intall commands
+### Install commands
 install(TARGETS ctrl_position_interface
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
