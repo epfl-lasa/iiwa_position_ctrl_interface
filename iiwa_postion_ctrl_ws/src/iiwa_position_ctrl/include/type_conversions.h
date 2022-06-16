@@ -9,7 +9,7 @@
 #include <vector>
 #include <Eigen/Dense>
 
-#include <robot_model/Model.hpp>
+#include <state_representation/space/joint/JointState.hpp>
 
 /**
  * @brief Takes a joint state object and returns the position as vector
