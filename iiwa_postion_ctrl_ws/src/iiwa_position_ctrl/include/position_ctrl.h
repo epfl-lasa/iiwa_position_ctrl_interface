@@ -17,7 +17,7 @@
 #include <robot_model/Model.hpp>
 #include <actionlib/server/simple_action_server.h>
 
-#include <iiwa_position_msgs/goToJointPosAction.h>
+#include "iiwa_position_msgs/goToJointPosAction.h"
 
 /**
  * @brief Ros Node to control the position of a robot through a ROS action.
