@@ -1,5 +1,4 @@
 # Goal
-# Goal
 uint32 nbJoints
 float64[] goalPose
 float64[] tol

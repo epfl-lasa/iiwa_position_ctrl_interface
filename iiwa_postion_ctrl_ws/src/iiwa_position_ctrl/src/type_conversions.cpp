@@ -8,7 +8,6 @@
 #include "type_conversions.h"
 
 std::vector<double> jointStateToPosVec(state_representation::JointState jointState){
-    
     uint32_t nbElem = jointState.get_size();
     Eigen::VectorXd eigenVectPos = jointState.get_positions();
     std::vector<double> stdVectPos(nbElem);

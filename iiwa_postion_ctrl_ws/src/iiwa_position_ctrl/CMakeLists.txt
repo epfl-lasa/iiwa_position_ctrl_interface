@@ -1,4 +1,3 @@
-
 ### Flags and standards
 cmake_minimum_required(VERSION 3.12)
 project(iiwa_postion_ctrl)
@@ -16,8 +15,6 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
-
-
 ### Dependencies
 list(APPEND CMAKE_PREFIX_PATH /opt/openrobots)
 
@@ -57,7 +54,7 @@ target_link_libraries(ctrl_position_interface
     ${control_libraries_LIBRARIES}
 )
 
-### Intall commands
+### Install commands
 install(TARGETS ctrl_position_interface
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

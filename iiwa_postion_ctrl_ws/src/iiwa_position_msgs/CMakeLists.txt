@@ -15,8 +15,6 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
-
-
 ### Dependencies
 find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs                
@@ -34,8 +32,6 @@ generate_messages(
     actionlib_msgs
     std_msgs
 )
-
-
 ### Make package
 catkin_package(
   CATKIN_DEPENDS actionlib_msgs std_msgs message_runtime 
