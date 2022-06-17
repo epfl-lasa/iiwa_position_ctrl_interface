@@ -134,6 +134,7 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
 
             // Break out when goal is reached
             if(goalReached){ 
+                this->stopRobot();
                 break;
             }
 
