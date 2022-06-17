@@ -8,7 +8,9 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>std_msgs</depend>
+  <depend>actionlib</depend>
   <depend>sensor_msgs</depend>
   <depend>iiwa_position_msgs</depend>
+
 
 </package>
