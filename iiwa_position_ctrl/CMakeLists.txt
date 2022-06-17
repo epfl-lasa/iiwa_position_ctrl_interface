@@ -33,7 +33,8 @@ add_compile_definitions(BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS)
 add_compile_definitions(BOOST_MPL_LIMIT_LIST_SIZE=30)
 
 catkin_package(CATKIN_DEPENDS iiwa_position_msgs
-               LIBRARIES ctrl_position_interface)
+               LIBRARIES iiwa_postion_ctrl
+               INCLUDE_DIRS include)
 
 ### Code directories
 include_directories(
@@ -47,15 +48,15 @@ set(SRC_FILES
     src/type_conversions.cpp
     src/position_ctrl.cpp)
 
-add_library(ctrl_position_interface ${SRC_FILES})
+add_library(iiwa_postion_ctrl STATIC ${SRC_FILES})
 
-target_link_libraries(ctrl_position_interface
+target_link_libraries(iiwa_postion_ctrl
     ${catkin_LIBRARIES}
     ${control_libraries_LIBRARIES}
 )
 
 ### Install commands
-install(TARGETS ctrl_position_interface
+install(TARGETS iiwa_postion_ctrl
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -64,3 +65,7 @@ install(TARGETS ctrl_position_interface
 install(DIRECTORY include/${PROJECT_NAME}
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
+
+install(DIRECTORY config
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+        )
