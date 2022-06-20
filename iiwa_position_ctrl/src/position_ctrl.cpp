@@ -66,7 +66,7 @@ void PositionController::sendPosCommand(std::vector<double> posCmd) {
 
     positionCmdMsg.data.resize(posCmd.size());
     for(uint32_t i = 0; i < posCmd.size(); ++i){
-        positionCmdMsg.data[i] = ratio * posCmd[i];
+        positionCmdMsg.data[i] = posCmd[i];
     }
 
     commandPub_.publish(positionCmdMsg);
