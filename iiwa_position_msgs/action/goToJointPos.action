@@ -2,6 +2,7 @@
 uint32 nbJoints
 float64[] goalPose
 float64[] tol
+float64 timeToGoal
 ---
 
 # Result

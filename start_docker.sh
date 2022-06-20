@@ -69,17 +69,17 @@ if [ "${MODE}" != "connect" ]; then
         --opt type="none" \
         --opt device="${PWD}/iiwa_position_ctrl" \
         --opt o="bind" \
-        "iiwa_position_ctrl_interface_vol"
-    FWD_ARGS+=(--volume="iiwa_position_ctrl_interface_vol:/home/${USERNAME}/ros_ws/iiwa_position_ctrl")
+        "iiwa_position_ctrl_ros_pckg"
+    FWD_ARGS+=(--volume="iiwa_position_ctrl_ros_pckg:/home/${USERNAME}/ros_ws/src/iiwa_position_ctrl")
 
     # ROS positon control messages package
-    docker volume rm iiwa_position_ctrl_ros_pckg
+    docker volume rm iiwa_position_ctrl_ros_msgs
     docker volume create --driver local \
         --opt type="none" \
         --opt device="${PWD}/iiwa_position_msgs" \
         --opt o="bind" \
-        "iiwa_position_ctrl_interface_vol"
-    FWD_ARGS+=(--volume="iiwa_position_ctrl_interface_vol:/home/${USERNAME}/ros_ws/iiwa_position_msgs")
+        "iiwa_position_ctrl_ros_msgs"
+    FWD_ARGS+=(--volume="iiwa_position_ctrl_ros_msgs:/home/${USERNAME}/ros_ws/src/iiwa_position_msgs")
 
     # If a vscode file exist, add it to the ROS ws to help linting
     if [ -d "${PWD}/.vscode" ]; then

@@ -56,6 +56,18 @@ protected:
     void sendPosCommand(std::vector<double> posCmd);
 
     /**
+     * @brief Send a position command that is part of a trajectory in joint space to the robot
+     * @details No checks are performed. It is up to the caller to make sure it's valid. 
+     *          The trajectory is assumed to be linear in joint space and the progress correspond to how
+     *          far we are in the trajectory.
+     * 
+     * @param posCmd Final position to go to.
+     * @param startPos Starting position of the trajectory
+     * @param progress Ratio of how far along the trajectory we're supposed to be. Normally in [0, 1]
+     */
+    void sendTrajPosCommand(std::vector<double> goalPos, std::vector<double> startPos, double progress);
+
+    /**
      * @brief Stops the robot
      * @details Does so by sending a command to go to the current position of the robot.
      *          Robot might keep moving a bit due to controller

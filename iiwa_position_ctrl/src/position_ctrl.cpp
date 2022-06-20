@@ -8,6 +8,7 @@
  */
 #include <chrono>
 #include <thread>
+#include <algorithm>
 
 #include <std_msgs/Float64MultiArray.h>
 #include <sensor_msgs/JointState.h>
@@ -71,6 +72,21 @@ void PositionController::sendPosCommand(std::vector<double> posCmd) {
     commandPub_.publish(positionCmdMsg);
 }
 
+void PositionController::sendTrajPosCommand(std::vector<double> goalPos, std::vector<double> startPos, double progress){
+    
+    uint32_t nbJoints = goalPos.size();
+    std::vector<double> posCmd(nbJoints);
+
+    // Linear interpolation in joint space
+    for(uint32_t i = 0; i < nbJoints; ++i){
+        posCmd[i] = startPos[i] + (goalPos[i] - startPos[i]) * progress; 
+    }
+
+    // Send command
+    this->sendPosCommand(posCmd);
+
+}
+
 void PositionController::stopRobot(){
     std::lock_guard<std::mutex> jointStateLock(jointStateMtx_);
     this->sendPosCommand(eigenVecToStdVec(jointState_.get_positions()));
@@ -98,10 +114,16 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
     // Ros helpers
     ros::Rate FBRate(actionFBFrq_);
     Eigen::VectorXd currentError;
+    ros::Time startTime;
+    ros::Duration timeSinceStart;
 
     // Messages
     iiwa_position_msgs::goToJointPosFeedback feedbackMsg;
     iiwa_position_msgs::goToJointPosResult resultMsg;
+
+    // Related to trajectory tracking
+    double progress = 0;
+    std::vector<double> startPose;
 
     // Get a lock for joint state. We will need it later
     std::unique_lock<std::mutex> jointStateLock(jointStateMtx_);
@@ -117,8 +139,11 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
 
     if (goalValid){
 
-        // Send command to IIWA
-        this->sendPosCommand(goal->goalPose);
+        // Record mvt start time and pose
+        startTime = ros::Time::now();
+        jointStateLock.lock();
+        startPose = eigenVecToStdVec(jointState_.get_positions());
+        jointStateLock.unlock();
 
         // Feedback loop
         while (ros::ok()){
@@ -148,8 +173,16 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
             feedbackMsg.currentError = eigenVecToStdVec(currentError);
             goToJointPosAS_.publishFeedback(feedbackMsg);
             
-            // Send the command again for confirmation (That's how the interface works)
-            this->sendPosCommand(goal->goalPose);
+            // Follow linear trajectory if goal time is specified
+            if(goal->timeToGoal > 0){
+                timeSinceStart = ros::Time::now() - startTime;
+                progress = std::min(timeSinceStart.toSec() / goal->timeToGoal, 1.);
+                this->sendTrajPosCommand(goal->goalPose, startPose, progress);
+            
+            // Else just go to goal as fast as possible
+            } else {
+                this->sendPosCommand(goal->goalPose);
+            }
 
             // Sleep until next loop
             FBRate.sleep();
