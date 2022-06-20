@@ -62,13 +62,35 @@ fi
 
 # Create shared volumes to work with
 if [ "${MODE}" != "connect" ]; then
-    docker volume rm iiwa_position_ctrl_interface_vol
+    
+    # ROS postion control package
+    docker volume rm iiwa_position_ctrl_ros_pckg
     docker volume create --driver local \
         --opt type="none" \
-        --opt device="${PWD}" \
+        --opt device="${PWD}/iiwa_position_ctrl" \
         --opt o="bind" \
         "iiwa_position_ctrl_interface_vol"
-    FWD_ARGS+=(--volume="iiwa_position_ctrl_interface_vol:/home/${USERNAME}/iiwa_position_ctrl_interface")
+    FWD_ARGS+=(--volume="iiwa_position_ctrl_interface_vol:/home/${USERNAME}/ros_ws/iiwa_position_ctrl")
+
+    # ROS positon control messages package
+    docker volume rm iiwa_position_ctrl_ros_pckg
+    docker volume create --driver local \
+        --opt type="none" \
+        --opt device="${PWD}/iiwa_position_msgs" \
+        --opt o="bind" \
+        "iiwa_position_ctrl_interface_vol"
+    FWD_ARGS+=(--volume="iiwa_position_ctrl_interface_vol:/home/${USERNAME}/ros_ws/iiwa_position_msgs")
+
+    # If a vscode file exist, add it to the ROS ws to help linting
+    if [ -d "${PWD}/.vscode" ]; then
+        docker volume rm iiwa_position_ctrl_vscode_param
+        docker volume create --driver local \
+            --opt type="none" \
+            --opt device="${PWD}/.vscode" \
+            --opt o="bind" \
+            "iiwa_position_ctrl_interface_vol"
+        FWD_ARGS+=(--volume="iiwa_position_ctrl_interface_vol:/home/${USERNAME}/ros_ws/.vscode")
+    fi
 fi
 
 aica-docker \
