@@ -66,7 +66,7 @@ void PositionController::sendPosCommand(std::vector<double> posCmd) {
 
     positionCmdMsg.data.resize(posCmd.size());
     for(uint32_t i = 0; i < posCmd.size(); ++i){
-        positionCmdMsg.data[i] = ratio * posCmd[i];
+        positionCmdMsg.data[i] = posCmd[i];
     }
 
     commandPub_.publish(positionCmdMsg);
@@ -115,7 +115,7 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
     ros::Rate FBRate(actionFBFrq_);
     Eigen::VectorXd currentError;
     ros::Time startTime;
-    ros::Time timeSinceStart;
+    ros::Duration timeSinceStart;
 
     // Messages
     iiwa_position_msgs::goToJointPosFeedback feedbackMsg;
@@ -177,11 +177,11 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
             if(goal->timeToGoal > 0){
                 timeSinceStart = ros::Time::now() - startTime;
                 progress = std::min(timeSinceStart.toSec() / goal->timeToGoal, 1.);
-                this->sendTrajPosCommand(goal->goalPose, startPose);
+                this->sendTrajPosCommand(goal->goalPose, startPose, progress);
             
             // Else just go to goal as fast as possible
             } else {
-                this->sendPosCommand(goal->goalPose)
+                this->sendPosCommand(goal->goalPose);
             }
 
             // Sleep until next loop
