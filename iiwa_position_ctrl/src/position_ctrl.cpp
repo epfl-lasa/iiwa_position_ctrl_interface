@@ -30,6 +30,7 @@ PositionController::PositionController(const std::shared_ptr<ros::NodeHandle> &n
 
     // Create a robot model
     std::string robotDescription;
+    ROS_INFO("Readin robot param");
     if(!nodeHandle_->getParam("/robot_description", robotDescription)) {
         ROS_ERROR("Could not load parameter 'robot_description' from parameter server.");
         ros::shutdown();
@@ -46,10 +47,7 @@ PositionController::PositionController(const std::shared_ptr<ros::NodeHandle> &n
     // Setup pubs
     commandPub_ = nodeHandle_->advertise<std_msgs::Float64MultiArray>("/" + robotName + "/PositionController/command", 1);
 
-    // Wait for first joint position before starting the server
-    while (!firstJointStateReceived_){
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    ROS_INFO("Starting action server");
     goToJointPosAS_.start();
 }
 
@@ -98,7 +96,7 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
     bool goalValid = true;
 
     // Ros helpers
-    ros::Rate FBRate(1. / actionFBFrq_);
+    ros::Rate FBRate(actionFBFrq_);
     Eigen::VectorXd currentError;
 
     // Messages
@@ -108,6 +106,11 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
     // Get a lock for joint state. We will need it later
     std::unique_lock<std::mutex> jointStateLock(jointStateMtx_);
     jointStateLock.unlock();
+
+    // Wait for first joint position before moving
+    while (!firstJointStateReceived_){
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 
     // Check goal valid
     goalValid = this->checkGoalValid(goal);
@@ -123,6 +126,7 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
             // Check for preemption
             if(goToJointPosAS_.isPreemptRequested()){
                 this->stopRobot();
+                ROS_INFO("Action preempted");
                 break;
             }
 
@@ -133,8 +137,9 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
             goalReached = this->goalReached(currentError, goal->tol);
 
             // Break out when goal is reached
-            if(goalReached){ 
+            if(goalReached){
                 this->stopRobot();
+                ROS_INFO("Goal reached"); 
                 break;
             }
 
@@ -142,6 +147,9 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
             feedbackMsg.nbJoints = robotModel_->get_number_of_joints();
             feedbackMsg.currentError = eigenVecToStdVec(currentError);
             goToJointPosAS_.publishFeedback(feedbackMsg);
+            
+            // Send the command again for confirmation (That's how the interface works)
+            this->sendPosCommand(goal->goalPose);
 
             // Sleep until next loop
             FBRate.sleep();
@@ -153,7 +161,12 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
     resultMsg.positionReached = goalReached;
     resultMsg.finalError = eigenVecToStdVec(currentError);
     resultMsg.goalValid = goalValid;
-    goToJointPosAS_.setSucceeded(resultMsg);
+
+    if(goToJointPosAS_.isPreemptRequested()){
+        goToJointPosAS_.setPreempted(resultMsg);
+    } else {
+        goToJointPosAS_.setSucceeded(resultMsg);
+    }
 }
 
 bool PositionController::checkGoalValid(const iiwa_position_msgs::goToJointPosGoalConstPtr &goal){
@@ -182,8 +195,7 @@ bool PositionController::checkGoalValid(const iiwa_position_msgs::goToJointPosGo
     return goalValid;
 }
 
-bool PositionController::goalReached(Eigen::VectorXd posDiff, std::vector<double> tol)
-{
+bool PositionController::goalReached(Eigen::VectorXd posDiff, std::vector<double> tol){
     bool goalIsReached = true;
 
     for (uint32_t i = 0; i < posDiff.size(); ++i)
