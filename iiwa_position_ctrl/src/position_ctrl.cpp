@@ -65,10 +65,25 @@ void PositionController::sendPosCommand(std::vector<double> posCmd) {
 
     positionCmdMsg.data.resize(posCmd.size());
     for(uint32_t i = 0; i < posCmd.size(); ++i){
-        positionCmdMsg.data[i] = posCmd[i];
+        positionCmdMsg.data[i] = ratio * posCmd[i];
     }
 
     commandPub_.publish(positionCmdMsg);
+}
+
+void PositionController::sendTrajPosCommand(std::vector<double> goalPos, std::vector<double> startPos, double progress){
+    
+    uint32_t nbJoints = goalPos.size();
+    std::vector<double> posCmd(nbJoints);
+
+    // Linear interpolation in joint space
+    for(uint32_t i = 0; i < nbJoints; ++i){
+        posCmd[i] = startPos[i] + (goalPos[i] - startPos[i]) * progress; 
+    }
+
+    // Send command
+    this->sendPosCommand(posCmd);
+
 }
 
 void PositionController::stopRobot(){
@@ -98,6 +113,7 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
     // Ros helpers
     ros::Rate FBRate(actionFBFrq_);
     Eigen::VectorXd currentError;
+    ros::Time mvtStart;
 
     // Messages
     iiwa_position_msgs::goToJointPosFeedback feedbackMsg;
@@ -118,6 +134,7 @@ void PositionController::goToJointPosCallback(const iiwa_position_msgs::goToJoin
     if (goalValid){
 
         // Send command to IIWA
+        mvtStart = ros::Time::now();
         this->sendPosCommand(goal->goalPose);
 
         // Feedback loop
