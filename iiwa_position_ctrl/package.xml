@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>iiwa_postion_ctrl</name>
+  <version>0.0.0</version>
+  <description>The iiwa_postion_ctrl package provides a simple aciton node to move the IIWA in joint space</description>
+  <maintainer email="loic.niederhauser@epfl.ch">loic</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>std_msgs</depend>
+  <depend>actionlib</depend>
+  <depend>sensor_msgs</depend>
+  <depend>iiwa_position_msgs</depend>
+
+
+</package>
